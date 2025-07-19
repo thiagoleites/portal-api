@@ -3,17 +3,27 @@ import path from 'path';
 import fs from 'fs';
 
 export async function createUser(request, reply) {
-  const data = await request.file();
-  const { full_name, username, password } = data.fields;
-  let avatar = null;
-
-  if (data.file) {
-    const avatarName = `${Date.now()}_${data.file.filename}`;
-    const avatarPath = path.join('public/avatars', avatarName);
-    await fs.promises.writeFile(avatarPath, await data.file.toBuffer());
-    avatar = avatarName;
+  let full_name, username, password, avatar = null;
+  // Se multipart
+  if (request.isMultipart()) {
+    const data = await request.file();
+    full_name = data.fields.full_name;
+    username = data.fields.username;
+    password = data.fields.password;
+    if (data.file) {
+      const avatarName = `${Date.now()}_${data.file.filename}`;
+      const avatarPath = path.join('public/avatars', avatarName);
+      const writeStream = fs.createWriteStream(avatarPath);
+      await new Promise((resolve, reject) => {
+        data.file.pipe(writeStream);
+        data.file.on('end', resolve);
+        data.file.on('error', reject);
+      });
+      avatar = avatarName;
+    }
+  } else {
+    ({ full_name, username, password, avatar } = request.body);
   }
-
   const id = await User.create({ full_name, username, password, avatar });
   reply.code(201).send({ id });
 }
@@ -39,7 +49,12 @@ export async function updateUser(request, reply) {
     if (data.file) {
       const avatarName = `${Date.now()}_${data.file.filename}`;
       const avatarPath = path.join('public/avatars', avatarName);
-      await fs.promises.writeFile(avatarPath, await data.file.toBuffer());
+      const writeStream = fs.createWriteStream(avatarPath);
+      await new Promise((resolve, reject) => {
+        data.file.pipe(writeStream);
+        data.file.on('end', resolve);
+        data.file.on('error', reject);
+      });
       avatar = avatarName;
     }
   }

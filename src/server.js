@@ -1,5 +1,5 @@
 import Fastify from 'fastify';
-import fastifyMultipart from 'fastify-multipart';
+import fastifyMultipart from '@fastify/multipart';
 import userRoutes from './routes/userRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
 import postRoutes from './routes/postRoutes.js';
