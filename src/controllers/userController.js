@@ -6,21 +6,25 @@ export async function createUser(request, reply) {
   let full_name, username, password, avatar = null;
   // Se multipart
   if (request.isMultipart()) {
-    const data = await request.file();
-    full_name = data.fields.full_name;
-    username = data.fields.username;
-    password = data.fields.password;
-    if (data.file) {
-      const avatarName = `${Date.now()}_${data.file.filename}`;
-      const avatarPath = path.join('public/avatars', avatarName);
-      const writeStream = fs.createWriteStream(avatarPath);
-      await new Promise((resolve, reject) => {
-        data.file.pipe(writeStream);
-        data.file.on('end', resolve);
-        data.file.on('error', reject);
-      });
-      avatar = avatarName;
+    const parts = {};
+    for await (const part of request.parts()) {
+      if (part.type === 'file' && part.fieldname === 'avatar') {
+        const avatarName = `${Date.now()}_${part.filename}`;
+        const avatarPath = path.join('public/avatars', avatarName);
+        const writeStream = fs.createWriteStream(avatarPath);
+        await new Promise((resolve, reject) => {
+          part.file.pipe(writeStream);
+          part.file.on('end', resolve);
+          part.file.on('error', reject);
+        });
+        avatar = avatarName;
+      } else if (part.type === 'field') {
+        parts[part.fieldname] = part.value;
+      }
     }
+    full_name = parts.full_name || '';
+    username = parts.username || '';
+    password = parts.password || '';
   } else {
     ({ full_name, username, password, avatar } = request.body);
   }

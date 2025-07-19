@@ -7,7 +7,11 @@ import path from 'path';
 
 const fastify = Fastify({ logger: true });
 
-fastify.register(fastifyMultipart);
+fastify.register(fastifyMultipart, {
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10MB
+  }
+});
 fastify.register(import('@fastify/static'), {
   root: path.join(process.cwd(), 'public/avatars'),
   prefix: '/avatars/',
