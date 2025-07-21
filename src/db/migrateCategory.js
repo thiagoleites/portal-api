@@ -2,6 +2,9 @@ import { getDb } from './connection.js';
 
 async function migrateCategory() {
   const db = await getDb();
+
+  await db.exec(`DROP TABLE IF EXISTS categories;`); // remover tabela se já existir, linha exclusiva para uso em desenvolvimento
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS categories (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -12,7 +15,7 @@ async function migrateCategory() {
     );
   `);
   await db.close();
-  console.log('Category migration completed.');
+  console.log('Migração executada');
 }
 
 migrateCategory();

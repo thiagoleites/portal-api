@@ -2,6 +2,9 @@ import { getDb } from './connection.js';
 
 async function migratePost() {
   const db = await getDb();
+
+    await db.exec(`DROP TABLE IF EXISTS posts;`); // remove tabela se já existir, linha exclusiva para uso em desenvolvimento
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS posts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -20,7 +23,7 @@ async function migratePost() {
     );
   `);
   await db.close();
-  console.log('Post migration completed.');
+  console.log('Migração executada.');
 }
 
 migratePost();
